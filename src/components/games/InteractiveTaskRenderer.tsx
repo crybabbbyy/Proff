@@ -35,6 +35,7 @@ export const InteractiveTaskRenderer: React.FC<InteractiveTaskRendererProps> = (
           dropLabel={task.dropLabel}
           requiredCorrect={task.requiredCorrect}
           items={task.items}
+          layout={task.layout}
         />
       );
     case 'emotion_match':
