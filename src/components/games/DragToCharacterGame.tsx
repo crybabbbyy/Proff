@@ -30,6 +30,7 @@ interface Props {
   successMessage: string;
   nextLabel: string;
   onComplete: () => void;
+  layout?: 'split' | 'under';
 }
 
 const ItemTile: React.FC<{
@@ -57,13 +58,11 @@ const ItemTile: React.FC<{
         transform: transform ? CSS.Translate.toString(transform) : undefined,
         touchAction: 'none',
       }}
-      className={`relative flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border-2 select-none transition-colors ${
-        isDragging ? 'z-50 shadow-xl border-violet-500 bg-white' : ''
-      } ${
-        placed
+      className={`relative flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border-2 select-none transition-colors ${isDragging ? 'z-50 shadow-xl border-violet-500 bg-white' : ''
+        } ${placed
           ? 'bg-emerald-50 border-emerald-300 opacity-60 cursor-default'
           : 'bg-white border-indigo-100 hover:border-violet-400 shadow-sm cursor-grab active:cursor-grabbing'
-      } ${shaking ? 'shake border-rose-400 bg-rose-50' : ''}`}
+        } ${shaking ? 'shake border-rose-400 bg-rose-50' : ''}`}
     >
       {placed && (
         <span className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center">
@@ -106,9 +105,8 @@ const SceneDropZone: React.FC<{
   return (
     <div
       ref={setNodeRef}
-      className={`relative rounded-[24px] overflow-hidden border-4 transition-colors bg-white ${
-        isOver ? 'border-violet-500 ring-4 ring-violet-200' : done ? 'border-emerald-300' : 'border-indigo-50'
-      }`}
+      className={`relative rounded-[24px] overflow-hidden border-4 transition-colors bg-white ${isOver ? 'border-violet-500 ring-4 ring-violet-200' : done ? 'border-emerald-300' : 'border-indigo-50'
+        }`}
     >
       <div className="aspect-[600/340]">{illustration}</div>
       {/* На телефоне полоска под картинкой, на широком экране — поверх неё */}
@@ -121,9 +119,8 @@ const SceneDropZone: React.FC<{
             {Array.from({ length: requiredCorrect }, (_, i) => (
               <span
                 key={i}
-                className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center ${
-                  placed[i] ? 'bg-emerald-50 border-2 border-emerald-300' : 'border-2 border-dashed border-indigo-200'
-                }`}
+                className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center ${placed[i] ? 'bg-emerald-50 border-2 border-emerald-300' : 'border-2 border-dashed border-indigo-200'
+                  }`}
               >
                 {placed[i] && <ItemIcon id={placed[i]} className="w-7 h-7 sm:w-9 sm:h-9" />}
               </span>
@@ -154,6 +151,7 @@ export const DragToCharacterGame: React.FC<Props> = ({
   successMessage,
   nextLabel,
   onComplete,
+  layout,
 }) => {
   const soundEnabled = useGameStore((s) => s.soundEnabled);
   const [placed, setPlaced] = useState<ItemIconId[]>([]);
@@ -191,6 +189,40 @@ export const DragToCharacterGame: React.FC<Props> = ({
 
   const left = requiredCorrect - placed.length;
 
+  const statusLine = (
+    <p className="text-xs font-extrabold text-indigo-900/60 mb-2 px-1">
+      {done
+        ? 'Готово!'
+        : requiredCorrect > 1
+          ? `Осталось найти: ${left} из ${requiredCorrect}`
+          : 'Выбери один предмет'}
+    </p>
+  );
+
+  // Варианты ответа: по 4 слева и справа от картинки (или все под картинкой).
+  const renderItems = (gridClass: string, split?: 'left' | 'right') => {
+    const list =
+      split === 'left'
+        ? items.slice(0, Math.ceil(items.length / 2))
+        : split === 'right'
+          ? items.slice(Math.ceil(items.length / 2))
+          : items;
+    return (
+      <div className={`grid ${gridClass} gap-3`}>
+        {list.map((item) => (
+          <ItemTile
+            key={item.id}
+            item={item}
+            placed={placed.includes(item.id)}
+            disabled={done}
+            shaking={shakeId === item.id}
+            onGive={() => give(item.id)}
+          />
+        ))}
+      </div>
+    );
+  };
+
   return (
     <GameShell
       title={title}
@@ -202,8 +234,9 @@ export const DragToCharacterGame: React.FC<Props> = ({
       onComplete={onComplete}
     >
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-          <div className="lg:col-span-7">
+        {layout === 'under' ? (
+          // МЧС: варианты ответов размещаются под картинкой.
+          <div>
             <SceneDropZone
               scene={scene}
               dropLabel={dropLabel}
@@ -211,29 +244,61 @@ export const DragToCharacterGame: React.FC<Props> = ({
               placed={placed}
               done={done}
             />
-          </div>
-          <div className="lg:col-span-5">
-            <p className="text-xs font-extrabold text-indigo-900/60 mb-2 px-1">
-              {done
-                ? 'Готово!'
-                : requiredCorrect > 1
-                ? `Осталось найти: ${left} из ${requiredCorrect}`
-                : 'Выбери один предмет'}
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-3">
-              {items.map((item) => (
-                <ItemTile
-                  key={item.id}
-                  item={item}
-                  placed={placed.includes(item.id)}
-                  disabled={done}
-                  shaking={shakeId === item.id}
-                  onGive={() => give(item.id)}
-                />
-              ))}
+            <div className="mt-4">
+              {statusLine}
+              {renderItems('grid-cols-2 sm:grid-cols-4')}
             </div>
           </div>
-        </div>
+        ) : layout === 'split' && items.length >= 6 ? (
+          // Учитель, юрист и скорая: по половине вариантов слева и справа от картинки.
+          <div>
+            {/* На узких экранах варианты собираются под картинкой */}
+            <div className="lg:hidden">
+              <SceneDropZone
+                scene={scene}
+                dropLabel={dropLabel}
+                requiredCorrect={requiredCorrect}
+                placed={placed}
+                done={done}
+              />
+              <div className="mt-4">
+                {statusLine}
+                {renderItems('grid-cols-2 sm:grid-cols-4')}
+              </div>
+            </div>
+            <div className="hidden lg:grid lg:grid-cols-12 gap-4 items-center">
+              {statusLine}
+              <div className="lg:col-span-3">{renderItems('grid-cols-1', 'left')}</div>
+              <div className="lg:col-span-6">
+                <SceneDropZone
+                  scene={scene}
+                  dropLabel={dropLabel}
+                  requiredCorrect={requiredCorrect}
+                  placed={placed}
+                  done={done}
+                />
+              </div>
+              <div className="lg:col-span-3">{renderItems('grid-cols-1', 'right')}</div>
+            </div>
+          </div>
+        ) : (
+          // Остальные задания: картинка слева, варианты справа.
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            <div className="lg:col-span-7">
+              <SceneDropZone
+                scene={scene}
+                dropLabel={dropLabel}
+                requiredCorrect={requiredCorrect}
+                placed={placed}
+                done={done}
+              />
+            </div>
+            <div className="lg:col-span-5">
+              {statusLine}
+              {renderItems('grid-cols-2 sm:grid-cols-4 lg:grid-cols-2')}
+            </div>
+          </div>
+        )}
       </DndContext>
     </GameShell>
   );
