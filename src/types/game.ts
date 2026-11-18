@@ -125,6 +125,7 @@ export type InteractiveTask =
       /** Сколько верных предметов нужно перетащить, чтобы задание засчиталось. */
       requiredCorrect: number;
       items: DragItem[];
+      layout?: 'split' | 'under';
       successMessage: string;
     }
   | {
