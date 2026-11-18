@@ -308,7 +308,7 @@ export const ProfessionAvatar: React.FC<{
         <svg viewBox="0 0 120 120" className={className} fill="none">
           <circle cx="60" cy="60" r="54" fill="#E0E7FF" />
           {/* Neck */}
-          <rect x="53" y="66" width="14" height="16" rx="5" fill="#F6CDB8" />
+          <rect x="53" y="62" width="14" height="20" rx="5" fill="#F6CDB8" />
           {/* Dark Blue Police Uniform */}
           <path
             d="M24 106C27 84 42 78 60 78C78 78 93 84 96 106H24Z"
@@ -951,7 +951,7 @@ export const ProfessionSceneIllustration: React.FC<{
           <rect y="270" width="600" height="70" fill="#CBD5E1" />
           {/* Police Officer */}
           {/* Neck */}
-          <rect x="384" y="182" width="28" height="46" rx="10" fill="#F6CDB8" />
+          <rect x="384" y="176" width="28" height="52" rx="10" fill="#F6CDB8" />
           <path
             d="M310 340C320 245 352 220 398 220C444 220 476 245 486 340H310Z"
             fill="#1E3A8A"
